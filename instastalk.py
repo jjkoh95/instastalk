@@ -61,24 +61,29 @@ def getDataEdges():
 	return apiData['data']['user']['edge_owner_to_timeline_media']['edges']
 
 def downloadPostByType(dataNode, time, typename):
-	if typename == "GraphImage":
-		urllib.request.urlretrieve(dataNode['display_url'], '{0}.jpg'.format(time))
-	else:
-		shortcode = dataNode['shortcode']
-		# webdata
-		data = getWebData(URL + 'p/' + shortcode)
-		if typename == "GraphVideo":
-			urllib.request.urlretrieve( \
-				data['entry_data']['PostPage'][0]['graphql']['shortcode_media']['video_url'], \
-				'{0}.mp4'.format(time))	
-		elif typename == "GraphSidecar":
-			sidecarEdges = data['entry_data']['PostPage'][0]['graphql']['shortcode_media']['edge_sidecar_to_children']['edges']
-			for i in range(len(sidecarEdges)):
-				if sidecarEdges[i]['node']['__typename'] == 'GraphImage':
-					urllib.request.urlretrieve(sidecarEdges[i]['node']['display_url'], '{0}-{1}.jpg'.format(time,i))
-				elif sidecarEdges[i]['node']['__typename'] == 'GraphVideo':
-					urllib.request.urlretrieve(sidecarEdges[i]['node']['video_url'], '{0}-{1}.mp4'.format(time,i))
-
+	try:
+		if typename == "GraphImage":
+			urllib.request.urlretrieve(dataNode['display_url'], '{0}.jpg'.format(time))
+		else:
+			shortcode = dataNode['shortcode']
+			# webdata
+			data = getWebData(URL + 'p/' + shortcode)
+			if typename == "GraphVideo":
+				urllib.request.urlretrieve( \
+					data['entry_data']['PostPage'][0]['graphql']['shortcode_media']['video_url'], \
+					'{0}.mp4'.format(time))	
+			elif typename == "GraphSidecar":
+				sidecarEdges = data['entry_data']['PostPage'][0]['graphql']['shortcode_media']['edge_sidecar_to_children']['edges']
+				for i in range(len(sidecarEdges)):
+					if sidecarEdges[i]['node']['__typename'] == 'GraphImage':
+						urllib.request.urlretrieve(sidecarEdges[i]['node']['display_url'], '{0}-{1}.jpg'.format(time,i))
+					elif sidecarEdges[i]['node']['__typename'] == 'GraphVideo':
+						urllib.request.urlretrieve(sidecarEdges[i]['node']['video_url'], '{0}-{1}.mp4'.format(time,i))
+	except Exception as e:
+		print(e)
+		print("error, retrying")
+		return downloadPostByType(dataNode, time, typename)
+		
 def main():
 	dataEdges = getDataEdges()
 	if not os.path.exists(TARGETUSER):
@@ -89,12 +94,10 @@ def main():
 		while i >= 0:
 			time = dataEdges[i]['node']['taken_at_timestamp']
 			time = datetime.datetime.fromtimestamp(time).strftime('%Y-%m-%d--%H-%M-%S')
-			try:
-				print("downloading post at {0}".format(time))
-				downloadPostByType(dataEdges[i]['node'], time, dataEdges[i]['node']['__typename'])
-				i -= 1
-			except Exception:
-				print("Error, retrying")
+			print("downloading post at {0}".format(time))
+			downloadPostByType(dataEdges[i]['node'], time, dataEdges[i]['node']['__typename'])
+			i -= 1
+
 	else:
 		# else UPDATE as necessary
 		os.chdir(TARGETUSER)
@@ -105,11 +108,8 @@ def main():
 			time = datetime.datetime.fromtimestamp(time).strftime('%Y-%m-%d--%H-%M-%S')
 			if time > latestTime:
 				print("downloading post at {0}".format(time))
-				try:
-					downloadPostByType(dataEdges[i]['node'], time, dataEdges[i]['node']['__typename'])
-					i += 1
-				except Exception:
-					print("Incomplete Read, retrying")
+				downloadPostByType(dataEdges[i]['node'], time, dataEdges[i]['node']['__typename'])
+				i += 1
 			else:
 				return
 
