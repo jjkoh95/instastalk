@@ -10,7 +10,7 @@ null = None
 true = True
 false = False
 
-# CONSTANT
+# CONSTANT / GLOBAL 
 URL = 'https://www.instagram.com/'
 QUERYID = 17888483320059182
 AJAXURL = URL + 'graphql/query/?query_id={0}&variables=%7B"id"%3A"{1}"%2C"first"%3A{2}%2C"after"%3A"{3}"%7D'
