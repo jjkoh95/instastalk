@@ -1,6 +1,3 @@
-# Instastalk
-Automate to download all posts
-
 ## Requirements/Installation
 Python 3
 
