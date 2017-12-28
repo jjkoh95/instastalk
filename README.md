@@ -2,7 +2,7 @@
 - Python 3
 
 ## Program
-- This program will automate to download all photos given a instagram user id. 
+- This program will automate to download all photos/videos given a instagram user id. 
 - Running the first time will create a directory with the given instagram user id containing all posts in it.
 - Running after the first time will check the directory and download **NEW** posts.
 
