@@ -10,10 +10,9 @@ null = None
 true = True
 false = False
 
-# CONSTANT / GLOBAL 
 URL = 'https://www.instagram.com/'
 QUERYID = 17888483320059182
-AJAXURL = URL + 'graphql/query/?query_id={0}&variables=%7B"id"%3A"{1}"%2C"first"%3A{2}%2C"after"%3A"{3}"%7D'
+APIURL = URL + 'graphql/query/?query_id={0}&variables=%7B"id"%3A"{1}"%2C"first"%3A{2}%2C"after"%3A"{3}"%7D'
 TARGETID = 0
 TOTALPOSTS = 0
 NUM = 100
@@ -66,8 +65,8 @@ def getIDandTotalPosts():
 
 
 def getDataEdges(end_cursor):
-	ajaxurl = AJAXURL.format(QUERYID, TARGETID, NUM, end_cursor)
-	apiData = getAPIData(ajaxurl)
+	apiurl = APIURL.format(QUERYID, TARGETID, NUM, end_cursor)
+	apiData = getAPIData(apiurl)
 	apiData = apiData['data']['user']['edge_owner_to_timeline_media']
 	return apiData['page_info']['end_cursor'], apiData['edges']
 
