@@ -1,9 +1,10 @@
-import urllib
+#import urllib
 from bs4 import BeautifulSoup
 import json
 import datetime
 import os
 import sys
+import requests
 
 # js to py
 null = None
@@ -19,9 +20,12 @@ NUM = 100
 
 
 def getWebData(url):
-	response = urllib.request.urlopen(url)
-	response = response.read()
-	response = response.decode('utf-8')
+	response = requests.get(url)
+	response = response.text
+
+	#response = urllib.request.urlopen(url)
+	#response = response.read()
+	#response = response.decode('utf-8')
 
 	response = BeautifulSoup(response, 'html.parser')
 	response = response.find_all('script')
@@ -50,9 +54,13 @@ def getLatestFilename():
 
 
 def getAPIData(url):
-	apiData = urllib.request.urlopen(url)
-	apiData = apiData.read()
-	apiData = apiData.decode('utf-8')
+	apiData = requests.get(url)
+	apiData = apiData.text
+
+	#apiData = urllib.request.urlopen(url)
+	#apiData = apiData.read()
+	#apiData = apiData.decode('utf-8')
+	
 	return json.loads(apiData)
 
 
