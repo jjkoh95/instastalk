@@ -67,9 +67,9 @@ def getAPIData(url):
 def getIDandTotalPosts():
 	webData = getWebData(URL + TARGETUSER)
 	global TARGETID
-	TARGETID = webData['entry_data']['ProfilePage'][0]['user']['id']
+	TARGETID = webData['entry_data']['ProfilePage'][0]['graphql']['user']['id']
 	global TOTALPOSTS
-	TOTALPOSTS = webData['entry_data']['ProfilePage'][0]['user']['media']['count']
+	TOTALPOSTS = webData['entry_data']['ProfilePage'][0]['graphql']['user']['edge_owner_to_timeline_media']['count']
 
 
 def getDataEdges(end_cursor):
@@ -141,6 +141,7 @@ def main():
 if __name__ == '__main__':
 	global TARGETUSER
 	TARGETUSER = sys.argv[1]
+	print("User: {0}".format(TARGETUSER))
 	main()
 
 
