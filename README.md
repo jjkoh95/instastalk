@@ -12,6 +12,3 @@
 
 ## Legal issue
 - Note that this is solely a project I made to download all my waifu photos and as a python practice. I do not intend to go against any rules and regulations of instagram. Use at your own risk.
-
-## Note
-- Follow me on [ig](https://www.instagram.com/jjkoh95/) in case you want to know what I have for lunch and dinner.
