@@ -13,3 +13,7 @@
 
 ## Legal issue
 - Note that this is solely a project I made to download all my waifu photos and as a python practice. I do not intend to go against any rules and regulations of instagram. Use at your own risk.
+
+## Side Note
+- The code is badly formatted because I intend to fully utilise the previous version I wrote earlier
+- Sorry
