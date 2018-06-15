@@ -16,3 +16,4 @@
 
 ## Side Note
 - The code is badly formatted because I intend to fully utilise the previous version I wrote earlier
+- Will refactor once I get the time to do it
