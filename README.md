@@ -7,13 +7,10 @@
 - Running after the first time will check the directory and download **NEW** posts.
 
 ## How to run
-- Simply download instastalk.py and run with instagram user id. 
-- Then enter login credentials (for private profiles and stories)
-- Eg. run the following line on terminal "python 3-instastalk.py google"
+- Simply download folder app and run python app.py
+- Then enter login credentials
+- The program will save your cookies in database so that you don't have to re-enter your credentials everytime
+- Note that the program doesn't work without login as I'm still trying to understand what is the deal with x-instagram-gis
 
 ## Legal issue
 - Note that this is solely a project I made to download all my waifu photos and as a python practice. I do not intend to go against any rules and regulations of instagram. Use at your own risk.
-
-## Side Note
-- The code is badly formatted because I intend to fully utilise the previous version I wrote earlier
-- Will refactor once I get the time to do it
