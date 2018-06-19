@@ -149,7 +149,6 @@ def scraper():
             print('Exit without logout')
             return
         else:
-            os.chdir('../')
             logout()
             return
     # try to get id and count by username
