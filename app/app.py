@@ -88,29 +88,30 @@ def promptLoginMode():
     print('===== Login Mode =====')
     print('Available accounts:')
     allUsers = UserDALC.getAll()
-    if(len(allUsers) == 0):
+    if(len(allUsers) != 0):
         for i in range(len(allUsers)):
             time = datetime.datetime.fromtimestamp(allUsers[i][2]).strftime('%Y-%m-%d--%H-%M-%S') 
             print('ID: {0}, Username: {1}, Last Login: {2}'.format(i, allUsers[i][0], time))
-        print('===== ====== ======')
+    print('===== ====== ======')
+    if(len(allUsers) != 0):
         print('1. Login with existing accounts')
-        print('2. Add new account')
-        print('9. Return to home page')
-        login_mode = input('Mode: ') 
-        if login_mode == '1':
-            userIndex = int(input('Select Users ID: '))
-            try:
-                global user
-                user = User()
-                user.loginOldEmail(allUsers[userIndex][0])
-                cookies = json.loads(user.cookie)
-                session.headers['x-csrftoken'] = cookies['csrftoken']
-                session.cookies.set('csrftoken', cookies['csrftoken'], domain='.instagram.com', path='/')
-                session.cookies.set('sessionid', cookies['sessionid'], domain='.instagram.com', path='/')
-                return scraper()
-            except Exception as e:
-                print(e)
-                return promptLoginMode()
+    print('2. Add new account')
+    print('9. Return to home page')
+    login_mode = input('Mode: ') 
+    if login_mode == '1':
+        userIndex = int(input('Select Users ID: '))
+        try:
+            global user
+            user = User()
+            user.loginOldEmail(allUsers[userIndex][0])
+            cookies = json.loads(user.cookie)
+            session.headers['x-csrftoken'] = cookies['csrftoken']
+            session.cookies.set('csrftoken', cookies['csrftoken'], domain='.instagram.com', path='/')
+            session.cookies.set('sessionid', cookies['sessionid'], domain='.instagram.com', path='/')
+            return scraper()
+        except Exception as e:
+            print(e)
+            return promptLoginMode()
     if login_mode == '2':
         username = input('Username: ')
         password = getpass.getpass('Password: ')
@@ -148,8 +149,8 @@ def scraper():
             print('Exit without logout')
             return
         else:
+            os.chdir('../')
             logout()
-            print('Exit logout')
             return
     # try to get id and count by username
     try:
