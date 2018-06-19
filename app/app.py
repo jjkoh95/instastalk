@@ -201,7 +201,6 @@ def getIDandTotalPosts(username):
     user_id = webData['entry_data']['ProfilePage'][0]['graphql']['user']['id']
     user_count = webData['entry_data']['ProfilePage'][0]['graphql']['user']['edge_owner_to_timeline_media']['count']
     user_rhx_gis = webData['rhx_gis']
-    print(user_rhx_gis)
     return user_id, user_count, user_rhx_gis
 
 def logout():
@@ -264,7 +263,6 @@ def getDataEdges(user_id, end_cursor, user_rhx_gis):
         variables = '{' + variables + '}'
         x_instagram_gis = '{rhx_gis}:{variables}'.format(rhx_gis=user_rhx_gis, variables=variables) 
         x_instagram_gis = hashlib.md5(x_instagram_gis.encode()).hexdigest()
-        print(x_instagram_gis)
         session.headers['x-instagram-gis'] = x_instagram_gis
     apiData = getAPIData(apiurl)
     apiData = apiData['data']['user']['edge_owner_to_timeline_media']
