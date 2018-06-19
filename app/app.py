@@ -45,7 +45,7 @@ def cookiesToDict(c):
     for i in range(len(pairs) - 1):
         each_pair = pairs[i].split('=')
         dic[each_pair[0]] = each_pair[1]
-    print(dic)
+    #print(dic)
     return dic
 
 def updateBaseHeader():
@@ -88,28 +88,29 @@ def promptLoginMode():
     print('===== Login Mode =====')
     print('Available accounts:')
     allUsers = UserDALC.getAll()
-    for i in range(len(allUsers)):
-        time = datetime.datetime.fromtimestamp(allUsers[i][2]).strftime('%Y-%m-%d--%H-%M-%S') 
-        print('ID: {0}, Username: {1}, Last Login: {2}'.format(i, allUsers[i][0], time))
-    print('===== ====== ======')
-    print('1. Login with existing accounts')
-    print('2. Add new account')
-    print('9. Return to home page')
-    login_mode = input('Mode: ') 
-    if login_mode == '1':
-        userIndex = int(input('Select Users ID: '))
-        try:
-            global user
-            user = User()
-            user.loginOldEmail(allUsers[userIndex][0])
-            cookies = json.loads(user.cookie)
-            session.headers['x-csrftoken'] = cookies['csrftoken']
-            session.cookies.set('csrftoken', cookies['csrftoken'], domain='.instagram.com', path='/')
-            session.cookies.set('sessionid', cookies['sessionid'], domain='.instagram.com', path='/')
-            return scraper()
-        except Exception as e:
-            print(e)
-            return promptLoginMode()
+    if(len(allUsers) == 0):
+        for i in range(len(allUsers)):
+            time = datetime.datetime.fromtimestamp(allUsers[i][2]).strftime('%Y-%m-%d--%H-%M-%S') 
+            print('ID: {0}, Username: {1}, Last Login: {2}'.format(i, allUsers[i][0], time))
+        print('===== ====== ======')
+        print('1. Login with existing accounts')
+        print('2. Add new account')
+        print('9. Return to home page')
+        login_mode = input('Mode: ') 
+        if login_mode == '1':
+            userIndex = int(input('Select Users ID: '))
+            try:
+                global user
+                user = User()
+                user.loginOldEmail(allUsers[userIndex][0])
+                cookies = json.loads(user.cookie)
+                session.headers['x-csrftoken'] = cookies['csrftoken']
+                session.cookies.set('csrftoken', cookies['csrftoken'], domain='.instagram.com', path='/')
+                session.cookies.set('sessionid', cookies['sessionid'], domain='.instagram.com', path='/')
+                return scraper()
+            except Exception as e:
+                print(e)
+                return promptLoginMode()
     if login_mode == '2':
         username = input('Username: ')
         password = getpass.getpass('Password: ')
@@ -286,7 +287,7 @@ def downloadPosts(username, user_id, user_count):
             while i >= 0:
                 time = dataEdges[i]['node']['taken_at_timestamp']
                 time = datetime.datetime.fromtimestamp(time).strftime('%Y-%m-%d--%H-%M-%S')
-                print('download post at {0}'.format(time))
+                print('Downloading post at {0}'.format(time))
                 downloadPostByType(dataEdges[i]['node'], time, dataEdges[i]['node']['__typename'])
                 i -= 1
     else:
@@ -300,7 +301,7 @@ def downloadPosts(username, user_id, user_count):
                 time = dataEdges[i]['node']['taken_at_timestamp']
                 time = datetime.datetime.fromtimestamp(time).strftime('%Y-%m-%d--%H-%M-%S')
                 if time > latestTime:
-                    print('downloading post at {0}'.format(time))
+                    print('Downloading post at {0}'.format(time))
                     downloadPostsByType(dataEdge[i]['node'], time, dataEdges[i]['node']['__typename'])
                     i += 1
                 else:
@@ -326,7 +327,7 @@ def downloadStories(username, user_id):
                 url = i['display_url']
             filename = time + '--stories' + fileformat
             if filename > latestStory:
-                print('Downloading stories @{0}'.format(time))
+                print('Downloading stories at {0}'.format(time))
                 downloadFile(url,filename)
 
 initialiseDB()
