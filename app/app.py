@@ -8,6 +8,7 @@ from bs4 import BeautifulSoup
 import os
 import sqlite3
 import datetime
+import hashlib
 
 session = requests.session()
 session.headers = {}
@@ -68,13 +69,15 @@ def promptBasicMode():
     print('===== Select Mode =====')
     print('1. Run with Login')
     print('2. Run without Login')
+    print('9. Exit')
     basic_mode = input('Mode: ')
     if basic_mode == '1':
         # go to login mode
         return promptLoginMode()
     if basic_mode == '2':
         # go to scraper
-        return scraper()
+        # need to have x-instagram-gis in header
+        return scraper(login=False)
     if basic_mode == '9':
         return        
     else:
@@ -86,9 +89,9 @@ def promptLoginMode():
         to login with existing accounts or new account
     '''
     print('===== Login Mode =====')
-    print('Available accounts:')
     allUsers = UserDALC.getAll()
     if(len(allUsers) != 0):
+        print('Available accounts:')
         for i in range(len(allUsers)):
             time = datetime.datetime.fromtimestamp(allUsers[i][2]).strftime('%Y-%m-%d--%H-%M-%S') 
             print('ID: {0}, Username: {1}, Last Login: {2}'.format(i, allUsers[i][0], time))
@@ -98,20 +101,21 @@ def promptLoginMode():
     print('2. Add new account')
     print('9. Return to home page')
     login_mode = input('Mode: ') 
-    if login_mode == '1':
-        userIndex = int(input('Select Users ID: '))
-        try:
-            global user
-            user = User()
-            user.loginOldEmail(allUsers[userIndex][0])
-            cookies = json.loads(user.cookie)
-            session.headers['x-csrftoken'] = cookies['csrftoken']
-            session.cookies.set('csrftoken', cookies['csrftoken'], domain='.instagram.com', path='/')
-            session.cookies.set('sessionid', cookies['sessionid'], domain='.instagram.com', path='/')
-            return scraper()
-        except Exception as e:
-            print(e)
-            return promptLoginMode()
+    if(len(allUsers) != 0):
+        if login_mode == '1':
+            userIndex = int(input('Select Users ID: '))
+            try:
+                global user
+                user = User()
+                user.loginOldEmail(allUsers[userIndex][0])
+                cookies = json.loads(user.cookie)
+                session.headers['x-csrftoken'] = cookies['csrftoken']
+                session.cookies.set('csrftoken', cookies['csrftoken'], domain='.instagram.com', path='/')
+                session.cookies.set('sessionid', cookies['sessionid'], domain='.instagram.com', path='/')
+                return scraper()
+            except Exception as e:
+                print(e)
+                return promptLoginMode()
     if login_mode == '2':
         username = input('Username: ')
         password = getpass.getpass('Password: ')
@@ -140,27 +144,35 @@ def promptLoginMode():
         print('Invalid input')
         return promptLoginMode()
 
-def scraper():
+def scraper(login=True):
     print('===== Welcome to Instastalk =====')
     username = input('Enter username or -1 to exit: ')
     while username == '-1':
-        logoutMode = input('logout? y/n? ')
-        if logoutMode == 'n':
-            print('Exit without logout')
-            return
+        if login:
+            logoutMode = input('logout? y/n? ')
+            if logoutMode == 'n':
+                print('Exit without logout')
+                return
+            else:
+                logout()
+                return
         else:
-            logout()
+            print('Exit')
             return
     # try to get id and count by username
     try:
-        user_id, user_count = getIDandTotalPosts(username)
-        downloadPosts(username, user_id, user_count)
-        downloadStories(username, user_id)
+        if login:
+            user_id, user_count = getIDandTotalPosts(username)
+            downloadPosts(username, user_id, user_count)
+            downloadStories(username, user_id)
+        else:
+            user_id, user_count, user_rhx_gis = getIDandTotalPosts(username)
+            downloadPosts(username, user_id, user_count, user_rhx_gis)
     except Exception as e:
         print(e)
     finally:
         os.chdir('../')
-        return scraper()
+        return scraper(login)
 
 def getWebData(url):
     '''
@@ -188,7 +200,9 @@ def getIDandTotalPosts(username):
     webData = getWebData(BASE_URL + username)
     user_id = webData['entry_data']['ProfilePage'][0]['graphql']['user']['id']
     user_count = webData['entry_data']['ProfilePage'][0]['graphql']['user']['edge_owner_to_timeline_media']['count']
-    return user_id, user_count
+    user_rhx_gis = webData['rhx_gis']
+    print(user_rhx_gis)
+    return user_id, user_count, user_rhx_gis
 
 def logout():
     '''
@@ -240,11 +254,18 @@ def getAPIData(url):
 
     return json.loads(apiData)
 
-def getDataEdges(user_id, end_cursor):
+def getDataEdges(user_id, end_cursor, user_rhx_gis):
     '''
         get edges based on end_cursor (starting end_cursor is empty string)
     '''
     apiurl = API_URL.format(query_hash=QUERY_HASH, id=user_id, first=NUM, after=end_cursor)
+    if user_rhx_gis != '':
+        variables = '"id":"{id}","first":12,"after":"{end_cursor}"'.format(id=user_id, end_cursor=end_cursor)
+        variables = '{' + variables + '}'
+        x_instagram_gis = '{rhx_gis}:{variables}'.format(rhx_gis=user_rhx_gis, variables=variables) 
+        x_instagram_gis = hashlib.md5(x_instagram_gis.encode()).hexdigest()
+        print(x_instagram_gis)
+        session.headers['x-instagram-gis'] = x_instagram_gis
     apiData = getAPIData(apiurl)
     apiData = apiData['data']['user']['edge_owner_to_timeline_media']
     return apiData['page_info']['end_cursor'], apiData['edges']
@@ -270,7 +291,7 @@ def downloadPostByType(dataNode, time, typename):
         print('Error, retry download')
         downloadPostByType(dataNode, time, typename)
 
-def downloadPosts(username, user_id, user_count):
+def downloadPosts(username, user_id, user_count, user_rhx_gis=''):
     '''
         This will download posts
     '''
@@ -281,7 +302,7 @@ def downloadPosts(username, user_id, user_count):
         os.mkdir(username)
         os.chdir(username)
         while counter < user_count:
-            endcursor, dataEdges = getDataEdges(user_id, end_cursor)
+            endcursor, dataEdges = getDataEdges(user_id, end_cursor, user_rhx_gis)
             counter += NUM
             i = len(dataEdges) - 1
             while i >= 0:
@@ -293,7 +314,7 @@ def downloadPosts(username, user_id, user_count):
     else:
         os.chdir(username)
         while counter < user_count:
-            end_cursor, dataEdges = getDataEdges(user_id, end_cursor)
+            end_cursor, dataEdge = getDataEdges(user_id, end_cursor, user_rhx_gis)
             counter += NUM
             latestTime = getLatestFilename()
             i = 0
