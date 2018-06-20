@@ -162,13 +162,14 @@ def scraper(login=True):
     # try to get id and count by username
     try:
         if login:
-            user_id, user_count = getIDandTotalPosts(username)
+            user_id, user_count, user_rhx_gis = getIDandTotalPosts(username)
             downloadPosts(username, user_id, user_count)
             downloadStories(username, user_id)
         else:
             user_id, user_count, user_rhx_gis = getIDandTotalPosts(username)
             downloadPosts(username, user_id, user_count, user_rhx_gis)
     except Exception as e:
+        #print('scraper function error')
         print(e)
     finally:
         os.chdir('../')
