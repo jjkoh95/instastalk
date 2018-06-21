@@ -313,7 +313,7 @@ def downloadPosts(username, user_id, user_count, user_rhx_gis=''):
     else:
         os.chdir(username)
         while counter < user_count:
-            end_cursor, dataEdge = getDataEdges(user_id, end_cursor, user_rhx_gis)
+            end_cursor, dataEdges = getDataEdges(user_id, end_cursor, user_rhx_gis)
             counter += NUM
             latestTime = getLatestFilename()
             i = 0
@@ -322,7 +322,7 @@ def downloadPosts(username, user_id, user_count, user_rhx_gis=''):
                 time = datetime.datetime.fromtimestamp(time).strftime('%Y-%m-%d--%H-%M-%S')
                 if time > latestTime:
                     print('Downloading post at {0}'.format(time))
-                    downloadPostsByType(dataEdge[i]['node'], time, dataEdges[i]['node']['__typename'])
+                    downloadPostByType(dataEdges[i]['node'], time, dataEdges[i]['node']['__typename'])
                     i += 1
                 else:
                     return
