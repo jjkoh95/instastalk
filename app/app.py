@@ -9,6 +9,8 @@ import os
 import sqlite3
 import datetime
 import hashlib
+import time as TIME
+import random
 
 session = requests.session()
 session.headers = {}
@@ -57,6 +59,7 @@ def updateBaseHeader():
     set_cookies = r.headers['set-cookie']
     set_cookies = cookiesToDict(set_cookies)
     session.headers['x-csrftoken'] = set_cookies['csrftoken']
+    print(set_cookies['csrftoken'])
 
 def initialiseDB():
     '''
@@ -169,7 +172,7 @@ def scraper(login=True):
             user_id, user_count, user_rhx_gis = getIDandTotalPosts(username)
             downloadPosts(username, user_id, user_count, user_rhx_gis)
     except Exception as e:
-        #print('scraper function error')
+        print('scraper function error')
         print(e)
     finally:
         os.chdir('../')
@@ -259,15 +262,22 @@ def getDataEdges(user_id, end_cursor, user_rhx_gis):
         get edges based on end_cursor (starting end_cursor is empty string)
     '''
     apiurl = API_URL.format(query_hash=QUERY_HASH, id=user_id, first=NUM, after=end_cursor)
+    print(apiurl)
     if user_rhx_gis != '':
         variables = '"id":"{id}","first":12,"after":"{end_cursor}"'.format(id=user_id, end_cursor=end_cursor)
         variables = '{' + variables + '}'
         x_instagram_gis = '{rhx_gis}:{variables}'.format(rhx_gis=user_rhx_gis, variables=variables) 
         x_instagram_gis = hashlib.md5(x_instagram_gis.encode()).hexdigest()
         session.headers['x-instagram-gis'] = x_instagram_gis
-    apiData = getAPIData(apiurl)
-    apiData = apiData['data']['user']['edge_owner_to_timeline_media']
-    return apiData['page_info']['end_cursor'], apiData['edges']
+    try:
+        apiData = getAPIData(apiurl)
+        apiData = apiData['data']['user']['edge_owner_to_timeline_media']
+        return apiData['page_info']['end_cursor'], apiData['edges']
+    except Exception as e:
+        print(e)
+        print(apiData)
+        print('Error in accessing data api')
+        return getDataEdges(user_id, end_cursor, user_rhx_gis) 
 
 def downloadPostByType(dataNode, time, typename):
     try:
@@ -301,7 +311,9 @@ def downloadPosts(username, user_id, user_count, user_rhx_gis=''):
         os.mkdir(username)
         os.chdir(username)
         while counter < user_count:
-            endcursor, dataEdges = getDataEdges(user_id, end_cursor, user_rhx_gis)
+            timeFactor = 5*int(random.random())
+            TIME.sleep(timeFactor)
+            end_cursor, dataEdges = getDataEdges(user_id, end_cursor, user_rhx_gis)
             counter += NUM
             i = len(dataEdges) - 1
             while i >= 0:
@@ -313,6 +325,8 @@ def downloadPosts(username, user_id, user_count, user_rhx_gis=''):
     else:
         os.chdir(username)
         while counter < user_count:
+            timeFactor = 5*int(random.random())
+            TIME.sleep(timeFactor)
             end_cursor, dataEdges = getDataEdges(user_id, end_cursor, user_rhx_gis)
             counter += NUM
             latestTime = getLatestFilename()
