@@ -1,0 +1,7 @@
+# credentials/login details
+.env
+credentials.json
+*.pickle
+
+# downloaded images
+data/
