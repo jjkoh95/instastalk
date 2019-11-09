@@ -1,12 +1,12 @@
 import requests
 from datetime import (
-    date,
     datetime,
 )
 from bs4 import BeautifulSoup
 import json
 import time
 import random
+import pickle
 from instastalk.constants import (
     BASE_URL,
     QUERY_POST_URL,
@@ -27,12 +27,14 @@ class BaseStalker():
             'content-type': 'application/x-www-form-urlencoded',
         }
         self.session.get(BASE_URL)
+        self.history = {}
 
-    def download_user(self, username: str, last_download_datetime: date = datetime.now(), multiprocessing: bool = False, timesleep_factor: int = 60):
-        ''' download_user
-        This should download all posts/stories related to user
-        '''
+    def download_user(self, username: str, download_timestamp: int = int(time.time()), multiprocessing: bool = False, timesleep_factor: int = 60):
+        ''' this is the most important io - download all posts/stories related to user '''
 
+        # handle this in a stupid way for now
+        if username not in self.history:
+            self.history[username] = 0
         resp = BeautifulSoup(self.session.get(
             f'{BASE_URL}/{username}').text, 'html.parser')
         scripts = resp.find_all('script')
@@ -41,7 +43,7 @@ class BaseStalker():
         # guaranteed to have response
         if shared_data_script is None:
             raise Exception(f'Unable to extract data from user - {username}')
-        # basically the length of "window._sharedData"
+        # basically the length of "window._sharedData = "
         shared_data = json.loads(shared_data_script.text[21:-1])
 
         # first iteration should get from window._sharedData
@@ -49,11 +51,16 @@ class BaseStalker():
         user_id = user_data['id']
         end_cursor = user_data['edge_owner_to_timeline_media']['page_info']['end_cursor']
         edges = user_data['edge_owner_to_timeline_media']['edges']
-        for edge in edges:
-            self._sleep(timesleep_factor)
-            self._download_by_shortcode(edge['node']['shortcode'], username)
+        # this is a flag to determine if a post has been downloaded or not
+        should_continue = True
 
         while end_cursor != None:
+            for edge in edges:
+                self._sleep(timesleep_factor)
+                should_continue = self._download_by_shortcode(
+                    edge['node']['shortcode'], username)
+                if not should_continue:
+                    return
             self._sleep(timesleep_factor)
             query_url = QUERY_POST_URL.format(
                 id=user_id, first=12, after=end_cursor)
@@ -61,18 +68,18 @@ class BaseStalker():
             timeline_media = query_response['data']['user']['edge_owner_to_timeline_media']
             end_cursor = timeline_media['page_info']['end_cursor']
             edges = timeline_media['edges']
-            for edge in edges:
-                self._sleep(timesleep_factor)
-                self._download_by_shortcode(
-                    edge['node']['shortcode'], username)
+
+        # This is useful for the app to pick up last downloaded datetime
+        self.history[username] = download_timestamp
 
     def _sleep(self, timesleep_factor: int):
         ''' sleep function to outsmart instagram rate limiting '''
         return time.sleep(random.random()*timesleep_factor)
 
-    def _download_by_shortcode(self, shortcode: str, username: str):
+    def _download_by_shortcode(self, shortcode: str, username: str) -> bool:
         ''' essentially every post has a shortcode associated,
-        this is mostly useful in `nested` edges/nodes/posts - GraphSidecar
+        this is mostly useful in `nested` edges/nodes/posts - GraphSidecar,
+        this should return a flag if app should continue
         '''
         shortcode_url = SHORTCODE_URL.format(
             shortcode=shortcode,
@@ -88,10 +95,15 @@ class BaseStalker():
             self.session.get(BASE_URL)
             return self._download_by_shortcode(shortcode, username)
         query_response = json.loads(query_response.text)
+        time_taken_unix_timestamp = query_response['data']['shortcode_media']['taken_at_timestamp']
+        if (time_taken_unix_timestamp < self.history[username]):
+            # if time_taken < last action - meaning already saved stop
+            return False
         time_taken_timestamp = datetime.fromtimestamp(
-            query_response['data']['shortcode_media']['taken_at_timestamp']).strftime('%Y-%m-%d--%H-%M-%S')
+            time_taken_unix_timestamp).strftime('%Y-%m-%d--%H-%M-%S')
         self._download_node(
             query_response['data']['shortcode_media'], username, time_taken_timestamp)
+        return True
 
     def _download_node(self, node, username: str, time_taken_timestamp: str, count: int = 0):
         ''' a more `generic` function to download each node '''
@@ -122,3 +134,8 @@ class BaseStalker():
                     f.write(chunk)
             return
         raise Exception('Failed to download file')
+
+    def to_pickle(self, filename: str):
+        ''' save `self` as pickle '''
+        with open(filename, 'wb') as handle:
+            pickle.dump(self, handle, protocol=pickle.HIGHEST_PROTOCOL)

@@ -7,7 +7,7 @@ with io.open("README.rst", "rt", encoding="utf8") as f:
 setup(
     name='instastalk',
     packages=['instastalk'],
-    version='0.1.2',
+    version='0.1.3',
     license='MIT',
     description='Download your instacrush posts',
     author='jjkoh95',
@@ -26,10 +26,6 @@ setup(
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Build Tools',
         'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
     ],
 )
