@@ -1,9 +1,13 @@
+import io
 from setuptools import setup
+
+with io.open("README.rst", "rt", encoding="utf8") as f:
+    readme = f.read()
 
 setup(
     name='instastalk',
     packages=['instastalk'],
-    version='0.1.1',
+    version='0.1.2',
     license='MIT',
     description='Download your instacrush posts',
     author='jjkoh95',
@@ -14,6 +18,7 @@ setup(
         'beautifulsoup4',
         'requests',
     ],
+    long_description=readme,
     classifiers=[
         # Chose either "3 - Alpha", "4 - Beta" or "5 - Production/Stable" as the current state of your package
         'Development Status :: 3 - Alpha',

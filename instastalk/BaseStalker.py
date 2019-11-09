@@ -28,7 +28,7 @@ class BaseStalker():
         }
         self.session.get(BASE_URL)
 
-    def download_user(self, username: str, last_download_datetime: date = datetime.now(), multiprocessing: bool = False, timesleep_factor: int = 600):
+    def download_user(self, username: str, last_download_datetime: date = datetime.now(), multiprocessing: bool = False, timesleep_factor: int = 60):
         ''' download_user
         This should download all posts/stories related to user
         '''
@@ -41,9 +41,10 @@ class BaseStalker():
         # guaranteed to have response
         if shared_data_script is None:
             raise Exception(f'Unable to extract data from user - {username}')
-        # basically the length of window._sharedData
+        # basically the length of "window._sharedData"
         shared_data = json.loads(shared_data_script.text[21:-1])
 
+        # first iteration should get from window._sharedData
         user_data = shared_data['entry_data']['ProfilePage'][0]['graphql']['user']
         user_id = user_data['id']
         end_cursor = user_data['edge_owner_to_timeline_media']['page_info']['end_cursor']
@@ -51,6 +52,7 @@ class BaseStalker():
         for edge in edges:
             self._sleep(timesleep_factor)
             self._download_by_shortcode(edge['node']['shortcode'], username)
+
         while end_cursor != None:
             self._sleep(timesleep_factor)
             query_url = QUERY_POST_URL.format(
@@ -64,11 +66,14 @@ class BaseStalker():
                 self._download_by_shortcode(
                     edge['node']['shortcode'], username)
 
-    def _sleep(self, timesleep_factor):
+    def _sleep(self, timesleep_factor: int):
+        ''' sleep function to outsmart instagram rate limiting '''
         return time.sleep(random.random()*timesleep_factor)
 
     def _download_by_shortcode(self, shortcode: str, username: str):
-        ''''''
+        ''' essentially every post has a shortcode associated,
+        this is mostly useful in `nested` edges/nodes/posts - GraphSidecar
+        '''
         shortcode_url = SHORTCODE_URL.format(
             shortcode=shortcode,
             child_comment_count=3,
@@ -89,7 +94,7 @@ class BaseStalker():
             query_response['data']['shortcode_media'], username, time_taken_timestamp)
 
     def _download_node(self, node, username: str, time_taken_timestamp: str, count: int = 0):
-        ''''''
+        ''' a more `generic` function to download each node '''
         if node['__typename'] == 'GraphImage':
             self._download_file(node['display_url'],
                                 f'{username}/{time_taken_timestamp}-{count}.jpg')
@@ -102,6 +107,8 @@ class BaseStalker():
 
         if node['__typename'] == 'GraphSidecar':
             for i, edge in enumerate(node['edge_sidecar_to_children']['edges']):
+                # NOTE: This is to prevent rate-limiting
+                self._sleep(random.random()*i*0.5)
                 self._download_node(
                     edge['node'], username, time_taken_timestamp, i)
             return

@@ -6,3 +6,5 @@ __pycache__
 .ipynb_checkpoints/
 .vscode/
 dist/
+*.ipynb
+instastalk.egg-info/
