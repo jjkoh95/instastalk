@@ -1,0 +1,14 @@
+README.rst
+setup.cfg
+setup.py
+instastalk/AnonyStalker.py
+instastalk/BaseStalker.py
+instastalk/InstaStalker.py
+instastalk/Instastalk.py
+instastalk/__init__.py
+instastalk/constants.py
+instastalk.egg-info/PKG-INFO
+instastalk.egg-info/SOURCES.txt
+instastalk.egg-info/dependency_links.txt
+instastalk.egg-info/requires.txt
+instastalk.egg-info/top_level.txt

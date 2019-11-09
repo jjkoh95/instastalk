@@ -2,6 +2,7 @@
 .env
 credentials.json
 *.pickle
-
-# downloaded images
-data/
+__pycache__
+.ipynb_checkpoints/
+.vscode/
+dist/
