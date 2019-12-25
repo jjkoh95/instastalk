@@ -65,6 +65,10 @@ class InstaStalker(BaseStalker):
             for i in data['data']['reels_media'][0]['items']:
                 self._sleep(timesleep_factor)
                 time_taken = i['taken_at_timestamp']
+
+                if time_taken < self.history[username]:
+                    return
+
                 time_taken = datetime.fromtimestamp(
                     time_taken).strftime('%Y-%m-%d--%H-%M-%S')
 
