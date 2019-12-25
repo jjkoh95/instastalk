@@ -7,7 +7,7 @@ with io.open("README.rst", "rt", encoding="utf8") as f:
 setup(
     name='instastalk',
     packages=['instastalk'],
-    version='0.1.3',
+    version='0.1.12',
     license='MIT',
     description='Download your instacrush posts',
     author='jjkoh95',

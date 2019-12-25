@@ -51,6 +51,9 @@ class BaseStalker():
         user_id = user_data['id']
         end_cursor = user_data['edge_owner_to_timeline_media']['page_info']['end_cursor']
         edges = user_data['edge_owner_to_timeline_media']['edges']
+
+        self._download_user_stories(username, user_id)
+
         # this is a flag to determine if a post has been downloaded or not
         should_continue = True
 
@@ -139,3 +142,7 @@ class BaseStalker():
         ''' save `self` as pickle '''
         with open(filename, 'wb') as handle:
             pickle.dump(self, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    def _download_user_stories(self, username: str, user_id: str):
+        ''' not implemented '''
+        pass
