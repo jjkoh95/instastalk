@@ -29,7 +29,11 @@ class BaseStalker():
         self.session.get(BASE_URL)
         self.history = {}
 
-    def download_user(self, username: str, download_timestamp: int = int(time.time()), multiprocessing: bool = False, timesleep_factor: int = 60):
+    def download_user(self,
+                      username: str,
+                      download_timestamp: int = int(time.time()),
+                      multiprocessing: bool = False,
+                      timesleep_factor: int = 60):
         ''' this is the most important io - download all posts/stories related to user '''
 
         # handle this in a stupid way for now
@@ -63,7 +67,10 @@ class BaseStalker():
                 should_continue = self._download_by_shortcode(
                     edge['node']['shortcode'], username)
                 if not should_continue:
+                    self.history[username] = download_timestamp
                     return
+
+            # Re-query for posts
             self._sleep(timesleep_factor)
             query_url = QUERY_POST_URL.format(
                 id=user_id, first=12, after=end_cursor)
@@ -145,4 +152,8 @@ class BaseStalker():
 
     def _download_user_stories(self, username: str, user_id: str):
         ''' not implemented '''
+        pass
+
+    def _download_tagged_posts(self):
+        ''' download user tagged posts '''
         pass

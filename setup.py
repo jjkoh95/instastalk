@@ -8,7 +8,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 setup(
     name='instastalk',
     packages=['instastalk'],
-    version='0.1.15',
+    version='0.1.16',
     license='MIT',
     description='Download your instacrush posts',
     author='jjkoh95',
